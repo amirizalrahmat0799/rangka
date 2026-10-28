@@ -10,12 +10,14 @@
   --accent-text: #ffffff;
   --danger: #b4410f;
   --code-bg: #f8fafb;
-  color-scheme: light dark;
+  color-scheme: light;
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
+/* dark: follows the system unless the toggle chose light; or chosen with the toggle */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
     --bg: #0d1217;
     --panel: #151c24;
     --text: #e6ebf1;
@@ -28,6 +30,21 @@
     --danger: #fb923c;
     --code-bg: #10161d;
   }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0d1217;
+  --panel: #151c24;
+  --text: #e6ebf1;
+  --muted: #8a96a6;
+  --line: #26303c;
+  --soft: #1c2530;
+  --accent: #2dd4bf;
+  --accent-soft: #123630;
+  --accent-text: #052520;
+  --danger: #fb923c;
+  --code-bg: #10161d;
 }
 
 * {
@@ -72,8 +89,47 @@ a {
   flex: 1;
 }
 
-.gh {
+.theme {
   margin-left: auto;
+  display: grid;
+  place-items: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  background: var(--panel);
+  color: var(--text);
+}
+
+.theme:hover {
+  background: var(--soft);
+}
+
+.theme svg {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+/* show the sun in dark mode (switch to light) and the moon in light mode (switch to dark) */
+.theme .sun,
+:root[data-theme="dark"] .theme .moon {
+  display: none;
+}
+
+:root[data-theme="dark"] .theme .sun {
+  display: block;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .theme .sun {
+    display: block;
+  }
+  :root:not([data-theme="light"]) .theme .moon {
+    display: none;
+  }
+}
+
+.gh {
   font-size: 0.9rem;
 }
 

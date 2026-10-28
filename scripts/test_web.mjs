@@ -72,6 +72,19 @@ for (const scheme of ["light", "dark"]) {
     console.log(`zip: ${zip}`);
   }
 
+  // the theme button flips between light and dark, and the choice survives a reload
+  const bg = () => page.evaluate(() => getComputedStyle(document.body).backgroundColor);
+  const before = await bg();
+  await page.click("#theme");
+  const flipped = await bg();
+  check(before !== flipped, `theme button changes the colours (${scheme})`);
+  check((await page.getAttribute("#theme", "aria-label")).includes(scheme === "light" ? "light" : "dark"), `theme button label (${scheme})`);
+  await page.reload();
+  await page.waitForSelector(".tree button");
+  check((await bg()) === flipped, `theme choice is remembered (${scheme})`);
+  await page.click("#theme");
+  check((await bg()) === before, `and can be switched back (${scheme})`);
+
   if (shots) {
     await page.click("label:has(input[value=full])");
     await page.fill("#name", "kedai-runcit");

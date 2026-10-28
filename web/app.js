@@ -160,6 +160,30 @@ function renderTree(node, prefix, onSelect) {
   return ul;
 }
 
+// ---- light and dark mode ------------------------------------------------------------------------------
+
+const systemDark = window.matchMedia("(prefers-color-scheme: dark)");
+const isDark = () => (document.documentElement.dataset.theme ?? (systemDark.matches ? "dark" : "light")) === "dark";
+
+function labelThemeButton() {
+  const label = isDark() ? "Switch to light mode" : "Switch to dark mode";
+  $("theme").setAttribute("aria-label", label);
+  $("theme").title = label;
+}
+
+$("theme").addEventListener("click", () => {
+  const theme = isDark() ? "light" : "dark";
+  document.documentElement.dataset.theme = theme;
+  try {
+    localStorage.setItem("rangka.theme", theme);
+  } catch {
+    // private mode or blocked storage: the choice just won't be remembered
+  }
+  labelThemeButton();
+});
+systemDark.addEventListener("change", labelThemeButton);
+labelThemeButton();
+
 // ---- wiring --------------------------------------------------------------------------------------------
 
 const core = await loadCore();
