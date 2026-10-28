@@ -30,7 +30,7 @@ jobs:
           python-version: "3.13"
       - run: pip install ziglang==0.15.2
       - name: Build rangka.wasm
-        run: scripts/build_wasm.sh
+        run: bash scripts/build_wasm.sh
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v4
         with:

@@ -79,7 +79,7 @@ jobs:
           chmod +x bin/rangka
           bin/rangka new demo ${{ matrix.args }} -o "$RUNNER_TEMP" -y
       - name: Build and test the generated project
-        run: scripts/verify_project.sh "$RUNNER_TEMP/demo" ${{ matrix.docker && '--docker' || '' }}
+        run: bash scripts/verify_project.sh "$RUNNER_TEMP/demo" ${{ matrix.docker && '--docker' || '' }}
 
   web:
     name: Web page
@@ -95,7 +95,7 @@ jobs:
           node-version: "24"
       - run: pip install ziglang==0.15.2
       - name: Build rangka.wasm
-        run: scripts/build_wasm.sh
+        run: bash scripts/build_wasm.sh
       - name: Test in a browser
         run: |
           npm install --no-save playwright@1.56.1
