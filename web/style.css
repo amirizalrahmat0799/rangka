@@ -188,6 +188,10 @@ input:not([type]):focus {
   gap: 0.45rem;
 }
 
+#frontends {
+  grid-template-columns: repeat(3, 1fr);
+}
+
 .card {
   display: block;
   padding: 0.45rem 0.7rem;

@@ -1,6 +1,11 @@
 fastapi~={% v_fastapi %}
 uvicorn[standard]~={% v_uvicorn %}
-{% if postgres %}
+{% if has_db %}
 sqlalchemy~={% v_sqlalchemy %}
+{% endif %}
+{% if postgres %}
 psycopg[binary]~={% v_psycopg %}
+{% endif %}
+{% if mysql %}
+pymysql[rsa]~={% v_pymysql %}
 {% endif %}

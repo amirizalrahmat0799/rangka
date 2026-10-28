@@ -24,7 +24,7 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webmvc</artifactId>
         </dependency>
-{% if postgres %}
+{% if has_db %}
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-jdbc</artifactId>
@@ -33,6 +33,8 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-flyway</artifactId>
         </dependency>
+{% endif %}
+{% if postgres %}
         <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-database-postgresql</artifactId>
@@ -43,14 +45,32 @@
             <scope>runtime</scope>
         </dependency>
 {% endif %}
+{% if mysql %}
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-mysql</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+{% endif %}
+{% if h2 %}
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+{% endif %}
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
-{% if postgres %}
-        <!-- the tests run the same migrations against H2 in PostgreSQL mode, so they need no database server -->
+{% if db_server %}
+        <!-- the tests run the same migrations against H2 in {% database_label %} mode, so they need no database server -->
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>

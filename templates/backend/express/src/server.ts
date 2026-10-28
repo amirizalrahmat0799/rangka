@@ -1,13 +1,17 @@
 import { createApp } from "./app.js";
 {% if postgres %}
 import { connect } from "./postgres.js";
-{% else %}
+{% endif %}
+{% if mysql %}
+import { connect } from "./mysql.js";
+{% endif %}
+{% if not db_server %}
 import { MemoryTodoRepository } from "./todos.js";
 {% endif %}
 
 const port = Number(process.env.PORT ?? 8080);
-{% if postgres %}
-const databaseUrl = process.env.DATABASE_URL ?? "postgres://{% db_user %}:{% db_password %}@localhost:5432/{% db_name %}";
+{% if db_server %}
+const databaseUrl = process.env.DATABASE_URL ?? "{% db_url_local %}";
 
 const { todos, close } = await connect(databaseUrl);
 {% else %}
@@ -20,7 +24,7 @@ const server = createApp(todos).listen(port, () => {
 // Docker sends SIGTERM on `docker compose down`: finish open requests, then exit.
 for (const signal of ["SIGTERM", "SIGINT"] as const) {
   process.on(signal, () => {
-{% if postgres %}
+{% if db_server %}
     server.close(() => void close().then(() => process.exit(0)));
 {% else %}
     server.close(() => process.exit(0));

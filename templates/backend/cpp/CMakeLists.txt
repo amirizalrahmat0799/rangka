@@ -28,6 +28,11 @@ find_package(Threads REQUIRED)
 {% if postgres %}
 find_package(PostgreSQL REQUIRED)
 {% endif %}
+{% if mysql %}
+# the MySQL client library, or MariaDB's compatible one (Debian's default-libmysqlclient-dev)
+find_package(PkgConfig REQUIRED)
+pkg_search_module(MYSQL REQUIRED IMPORTED_TARGET mysqlclient libmariadb)
+{% endif %}
 
 # everything except main(), so the tests can link it too
 add_library(app_core STATIC
@@ -36,11 +41,17 @@ add_library(app_core STATIC
 {% if postgres %}
   src/postgres_store.cpp
 {% endif %}
+{% if mysql %}
+  src/mysql_store.cpp
+{% endif %}
 )
 target_include_directories(app_core PUBLIC src)
 target_link_libraries(app_core PUBLIC httplib::httplib nlohmann_json::nlohmann_json Threads::Threads)
 {% if postgres %}
 target_link_libraries(app_core PUBLIC PostgreSQL::PostgreSQL)
+{% endif %}
+{% if mysql %}
+target_link_libraries(app_core PUBLIC PkgConfig::MYSQL)
 {% endif %}
 if(MSVC)
   target_compile_options(app_core PUBLIC /W4 /utf-8)

@@ -42,17 +42,25 @@ jobs:
       matrix:
         include:
           - { name: spring, args: "-b spring" }
+          - { name: spring + h2, args: "-b spring -d h2" }
           - { name: react + spring + postgres, args: "-f react -b spring -d postgres", docker: true }
+          - { name: angular + spring + mysql, args: "-f angular -b spring -d mysql", docker: true }
+          - { name: vue + spring + h2, args: "-f vue -b spring -d h2", docker: true }
           - { name: express, args: "-b express" }
           - { name: vue + express + postgres, args: "-f vue -b express -d postgres", docker: true }
+          - { name: express + mysql, args: "-b express -d mysql", docker: true }
           - { name: fastapi, args: "-b fastapi" }
           - { name: react + fastapi + postgres, args: "-f react -b fastapi -d postgres", docker: true }
+          - { name: angular + fastapi + mysql, args: "-f angular -b fastapi -d mysql", docker: true }
           - { name: go, args: "-b go" }
           - { name: vue + go + postgres, args: "-f vue -b go -d postgres", docker: true }
+          - { name: go + mysql, args: "-b go -d mysql", docker: true }
           - { name: cpp, args: "-b cpp" }
           - { name: react + cpp + postgres, args: "-f react -b cpp -d postgres", docker: true }
+          - { name: cpp + mysql, args: "-b cpp -d mysql", docker: true }
           - { name: react, args: "-f react" }
           - { name: vue, args: "-f vue" }
+          - { name: angular, args: "-f angular" }
     steps:
       - uses: actions/checkout@v5
       - uses: actions/download-artifact@v4
@@ -73,7 +81,7 @@ jobs:
         with:
           go-version: "1.26"
           cache: false
-      - run: sudo apt-get update && sudo apt-get install -y libpq-dev
+      - run: sudo apt-get update && sudo apt-get install -y libpq-dev libmysqlclient-dev pkg-config
       - name: Generate
         run: |
           chmod +x bin/rangka

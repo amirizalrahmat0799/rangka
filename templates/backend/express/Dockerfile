@@ -12,7 +12,7 @@ ENV NODE_ENV=production
 COPY package*.json ./
 RUN npm install --omit=dev && npm cache clean --force
 COPY --from=build /app/dist ./dist
-{% if postgres %}
+{% if db_server %}
 COPY migrations ./migrations
 {% endif %}
 USER node

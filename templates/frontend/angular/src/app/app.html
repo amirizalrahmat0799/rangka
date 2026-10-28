@@ -1,0 +1,39 @@
+<main class="app">
+  <h1>{% title %}</h1>
+  <p [class]="status().ok ? 'status' : 'status down'">{{ status().text }}</p>
+
+  <form class="add" (submit)="add($event)">
+    <input
+      [value]="title()"
+      (input)="onInput($event)"
+      placeholder="What needs doing?"
+      [attr.maxlength]="maxLength"
+      aria-label="New todo"
+      autofocus
+    />
+    <button type="submit">Add</button>
+  </form>
+  @if (error()) {
+    <p class="error">{{ error() }}</p>
+  }
+
+  <ul class="todos">
+    @if (todos().length === 0) {
+      <li class="empty">Nothing to do yet.</li>
+    }
+    @for (todo of todos(); track todo.id) {
+      <li [class.done]="todo.done">
+        <label>
+          <input type="checkbox" [checked]="todo.done" (change)="toggle(todo)" />
+          <span>{{ todo.title }}</span>
+        </label>
+        <button class="remove" type="button" [attr.aria-label]="'Delete ' + todo.title" (click)="remove(todo)">×</button>
+      </li>
+    }
+  </ul>
+
+  <footer>
+    <span>{{ left() }} left</span>
+    <span>{% frontend_label %}{% if has_backend %} + {% backend_label %}{% endif %}{% if has_db %} + {% database_label %}{% endif %}</span>
+  </footer>
+</main>

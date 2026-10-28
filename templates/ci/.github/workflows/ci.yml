@@ -51,8 +51,11 @@ jobs:
       - run: go test ./...
 {% endif %}
 {% if cpp %}
-{% if has_db %}
+{% if postgres %}
       - run: sudo apt-get update && sudo apt-get install -y libpq-dev
+{% endif %}
+{% if mysql %}
+      - run: sudo apt-get update && sudo apt-get install -y libmysqlclient-dev
 {% endif %}
       - run: cmake -B build -DCMAKE_BUILD_TYPE=Release
       - run: cmake --build build -j
@@ -97,7 +100,7 @@ jobs:
           curl -sf -X POST "$base/api/todos" -H "Content-Type: application/json" -d '{"title": "from CI"}'
           curl -sf "$base/api/todos" | grep -q "from CI"
 {% if has_frontend %}
-          curl -sf "$base/" | grep -q '<div id="'
+          curl -sf "$base/" | grep -qi '<{% if angular %}app-root{% else %}div id={% endif %}'
 {% endif %}
       - name: Logs
         if: failure()

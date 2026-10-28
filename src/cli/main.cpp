@@ -27,9 +27,9 @@ Usage:
   rangka --version
 
 Options for new:
-  -f, --frontend <react|vue|none>
+  -f, --frontend <react|vue|angular|none>
   -b, --backend  <spring|express|fastapi|go|cpp|none>
-  -d, --db       <postgres|none>
+  -d, --db       <postgres|mysql|h2|none>  (h2: Spring Boot only)
   -p, --package  <java.package>  Java package for Spring Boot (default com.example.<name>)
       --no-ci                    leave out the GitHub Actions workflow
   -o, --output   <folder>        where to create the project folder (default: here)
@@ -43,6 +43,7 @@ Examples:
   rangka new shop --frontend react --backend spring --db postgres
   rangka new api --backend go --db postgres
   rangka new site --frontend vue
+  rangka new demo --frontend angular --backend spring --db h2
 )";
 
 struct Args {
@@ -110,6 +111,18 @@ std::vector<term::MenuItem> menu(std::span<const Choice> choices, bool include_n
     return items;
 }
 
+// Asks for a database. H2 runs inside a Java app, so it's only offered with Spring Boot.
+std::optional<Database> ask_database(Backend backend) {
+    std::vector<Choice> offered;
+    for (const auto& c : database_choices()) {
+        if (c.id == "h2" && backend != Backend::Spring) continue;
+        offered.push_back(c);
+    }
+    auto d = term::select("Database:", menu(offered, true), 0);
+    if (!d) return std::nullopt;
+    return parse_database(offered[*d].id);
+}
+
 std::string describe(const Choice& c) {
     if (c.id == "none") return "-";
     std::string s(c.label);
@@ -152,7 +165,7 @@ int cmd_new(const Args& args) {
     if (auto it = args.values.find("frontend"); it != args.values.end()) {
         auto f = parse_frontend(it->second);
         if (!f) {
-            std::cerr << term::red("error: ") << "unknown frontend \"" << it->second << "\" (react, vue or none)\n";
+            std::cerr << term::red("error: ") << "unknown frontend \"" << it->second << "\" (react, vue, angular or none)\n";
             return 2;
         }
         o.frontend = *f;
@@ -171,7 +184,7 @@ int cmd_new(const Args& args) {
     if (auto it = args.values.find("db"); it != args.values.end()) {
         auto d = parse_database(it->second);
         if (!d) {
-            std::cerr << term::red("error: ") << "unknown database \"" << it->second << "\" (postgres or none)\n";
+            std::cerr << term::red("error: ") << "unknown database \"" << it->second << "\" (postgres, mysql, h2 or none)\n";
             return 2;
         }
         o.database = *d;
@@ -227,15 +240,15 @@ int cmd_new(const Args& args) {
             if (!b) return cancelled();
             o.backend = *parse_backend(backend_choices()[*b].id);
             if (!db_given) {
-                auto d = term::select("Database:", menu(database_choices(), true), 0);
+                auto d = ask_database(o.backend);
                 if (!d) return cancelled();
-                o.database = *parse_database(database_choices()[*d].id);
+                o.database = *d;
             }
         }
     } else if (ask && o.backend != Backend::None && !db_given) {
-        auto d = term::select("Database:", menu(database_choices(), true), 0);
+        auto d = ask_database(o.backend);
         if (!d) return cancelled();
-        o.database = *parse_database(database_choices()[*d].id);
+        o.database = *d;
     }
 
     if (o.backend == Backend::Spring && o.java_package.empty() && ask) {

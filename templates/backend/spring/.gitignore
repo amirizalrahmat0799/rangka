@@ -1,4 +1,7 @@
 target/
+{% if h2 %}
+data/
+{% endif %}
 .idea/
 *.iml
 .vscode/

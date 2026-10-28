@@ -2,7 +2,7 @@
 FROM golang:{% v_go %}-alpine AS build
 WORKDIR /src
 COPY . .
-{% if postgres %}
+{% if db_server %}
 # go.sum isn't generated with the project (it records checksums of downloaded modules): tidy creates it
 RUN go mod tidy && CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/server .
 {% else %}

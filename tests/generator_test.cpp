@@ -29,6 +29,8 @@ Options opts(Frontend f, Backend b, Database d) {
 TEST("invalid combinations are refused") {
     CHECK(!generate(opts(Frontend::None, Backend::None, Database::None)).ok());
     CHECK(!generate(opts(Frontend::React, Backend::None, Database::Postgres)).ok());
+    CHECK(!generate(opts(Frontend::None, Backend::Go, Database::H2)).ok());  // H2 is Java only
+    CHECK(generate(opts(Frontend::None, Backend::Spring, Database::H2)).ok());
     auto bad_name = opts(Frontend::React, Backend::None, Database::None);
     bad_name.name = "???";
     CHECK(!generate(bad_name).ok());
@@ -75,9 +77,9 @@ TEST("layering with synthetic templates") {
 TEST("every combination renders the real templates") {
     std::set<std::string> seen_paths;
     int combos = 0;
-    for (auto f : {Frontend::None, Frontend::React, Frontend::Vue}) {
+    for (auto f : {Frontend::None, Frontend::React, Frontend::Vue, Frontend::Angular}) {
         for (auto b : {Backend::None, Backend::Spring, Backend::Express, Backend::FastApi, Backend::Go, Backend::Cpp}) {
-            for (auto d : {Database::None, Database::Postgres}) {
+            for (auto d : {Database::None, Database::Postgres, Database::MySql, Database::H2}) {
                 for (bool ci : {true, false}) {
                     auto o = opts(f, b, d);
                     o.ci = ci;
@@ -113,7 +115,8 @@ TEST("every combination renders the real templates") {
             }
         }
     }
-    CHECK_EQ(combos, 2 * (2 + 5 * 2 + 2 * 5 * 2));  // ci on/off x (frontend only, backend +/- db, both +/- db)
+    // backends with databases: 5 x (none, postgres, mysql) + spring with h2 = 16
+    CHECK_EQ(combos, 2 * (3 + 16 + 3 * 16));  // ci on/off x (frontend only, backend only, both)
 }
 
 TEST("options from text") {
@@ -128,6 +131,31 @@ TEST("options from text") {
     CHECK(!options_from_text("backend=cobol").ok());
     CHECK(!options_from_text("colour=blue").ok());
     CHECK(!options_from_text("nonsense").ok());
+}
+
+TEST("layout follows the database") {
+    // H2 runs inside the app: no Docker Compose, so a backend with H2 stays at the root
+    auto h2 = generate(opts(Frontend::None, Backend::Spring, Database::H2));
+    CHECK(h2.ok());
+    if (h2) {
+        CHECK(find(*h2, "pom.xml") != nullptr);
+        CHECK(find(*h2, "docker-compose.yml") == nullptr);
+    }
+    auto mysql = generate(opts(Frontend::None, Backend::Express, Database::MySql));
+    CHECK(mysql.ok());
+    if (mysql) {
+        CHECK(find(*mysql, "backend/src/mysql.ts") != nullptr);
+        CHECK(find(*mysql, "backend/src/postgres.ts") == nullptr);
+        CHECK(find(*mysql, "docker-compose.yml") && find(*mysql, "docker-compose.yml")->content.find("mysql:") !=
+                                                       std::string::npos);
+    }
+    auto ng = generate(opts(Frontend::Angular, Backend::Go, Database::None));
+    CHECK(ng.ok());
+    if (ng) {
+        CHECK(find(*ng, "frontend/angular.json") != nullptr);
+        CHECK(find(*ng, "frontend/proxy.conf.json") != nullptr);
+        CHECK(find(*ng, "frontend/vite.config.ts") == nullptr);
+    }
 }
 
 TEST("java package defaults from the name") {

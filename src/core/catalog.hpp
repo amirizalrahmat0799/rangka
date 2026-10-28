@@ -8,9 +8,9 @@
 
 namespace rangka {
 
-enum class Frontend { None, React, Vue };
+enum class Frontend { None, React, Vue, Angular };
 enum class Backend { None, Spring, Express, FastApi, Go, Cpp };
-enum class Database { None, Postgres };
+enum class Database { None, Postgres, MySql, H2 };
 
 struct Choice {
     std::string_view id;           // used in flags and templates: "spring"

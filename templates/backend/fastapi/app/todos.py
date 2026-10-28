@@ -28,7 +28,7 @@ class TodoStore(Protocol):
 
 
 class MemoryTodoStore:
-    """Keeps todos in memory: used by the tests{% if not postgres %}, and by the app until it gets a database{% endif %}."""
+    """Keeps todos in memory: used by the tests{% if not has_db %}, and by the app until it gets a database{% endif %}."""
 
     def __init__(self) -> None:
         self._todos: dict[int, Todo] = {}

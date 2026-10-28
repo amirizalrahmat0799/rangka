@@ -1,5 +1,8 @@
-{% if postgres %}
-"""Todos in PostgreSQL, through SQLAlchemy Core."""
+{% if has_db %}
+"""Todos in {% database_label %}, through SQLAlchemy Core.
+
+The queries avoid RETURNING (MySQL doesn't have it), so the same code runs on PostgreSQL, MySQL and SQLite.
+"""
 
 import logging
 import time
@@ -33,7 +36,7 @@ metadata = MetaData()
 todos_table = Table(
     "todos",
     metadata,
-    # BIGINT identity in PostgreSQL; plain INTEGER in SQLite (used by the tests), which needs it to autoincrement
+    # BIGINT in the database; plain INTEGER in SQLite (used by the tests), which needs it to autoincrement
     Column("id", BigInteger().with_variant(Integer, "sqlite"), primary_key=True, autoincrement=True),
     Column("title", String(MAX_TITLE_LENGTH), nullable=False),
     Column("done", Boolean, nullable=False, server_default=false()),
@@ -42,10 +45,12 @@ todos_table = Table(
 
 
 def database_url(url: str) -> str:
-    """Accepts the usual postgres://user:pass@host/db form and selects the psycopg 3 driver."""
+    """Accepts the usual postgres://... or mysql://... URLs and selects the driver for them."""
     for prefix in ("postgres://", "postgresql://"):
         if url.startswith(prefix):
             return "postgresql+psycopg://" + url[len(prefix):]
+    if url.startswith("mysql://"):
+        return "mysql+pymysql://" + url[len("mysql://"):] + ("&" if "?" in url else "?") + "charset=utf8mb4"
     return url
 
 
@@ -73,30 +78,23 @@ class SqlTodoStore:
     def __init__(self, engine: Engine) -> None:
         self._engine = engine
 
+    def _select(self):
+        return select(todos_table.c.id, todos_table.c.title, todos_table.c.done)
+
     def list(self) -> list[Todo]:
         with self._engine.connect() as conn:
-            rows = conn.execute(
-                select(todos_table.c.id, todos_table.c.title, todos_table.c.done).order_by(todos_table.c.id)
-            )
+            rows = conn.execute(self._select().order_by(todos_table.c.id))
             return [Todo(id=r.id, title=r.title, done=r.done) for r in rows]
 
     def create(self, title: str) -> Todo:
         with self._engine.begin() as conn:
-            row = conn.execute(
-                insert(todos_table)
-                .values(title=title)
-                .returning(todos_table.c.id, todos_table.c.title, todos_table.c.done)
-            ).one()
-            return Todo(id=row.id, title=row.title, done=row.done)
+            result = conn.execute(insert(todos_table).values(title=title))
+            return Todo(id=result.inserted_primary_key[0], title=title, done=False)
 
     def set_done(self, todo_id: int, done: bool) -> Todo | None:
         with self._engine.begin() as conn:
-            row = conn.execute(
-                update(todos_table)
-                .where(todos_table.c.id == todo_id)
-                .values(done=done)
-                .returning(todos_table.c.id, todos_table.c.title, todos_table.c.done)
-            ).one_or_none()
+            conn.execute(update(todos_table).where(todos_table.c.id == todo_id).values(done=done))
+            row = conn.execute(self._select().where(todos_table.c.id == todo_id)).one_or_none()
             return None if row is None else Todo(id=row.id, title=row.title, done=row.done)
 
     def remove(self, todo_id: int) -> bool:

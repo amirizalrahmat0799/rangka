@@ -8,6 +8,9 @@
 {% if postgres %}
 #include "postgres_store.hpp"
 {% endif %}
+{% if mysql %}
+#include "mysql_store.hpp"
+{% endif %}
 
 namespace {
 httplib::Server* g_server = nullptr;
@@ -26,11 +29,10 @@ std::string env(const char* name, const char* fallback) {
 int main() {
     int port = std::stoi(env("PORT", "8080"));
 
-{% if postgres %}
+{% if db_server %}
     std::unique_ptr<Store> store;
     try {
-        store = std::make_unique<PostgresStore>(
-            env("DATABASE_URL", "postgres://{% db_user %}:{% db_password %}@localhost:5432/{% db_name %}"));
+        store = std::make_unique<{% if postgres %}PostgresStore{% endif %}{% if mysql %}MySqlStore{% endif %}>(env("DATABASE_URL", "{% db_url_local %}"));
     } catch (const std::exception& e) {
         std::fprintf(stderr, "database: %s\n", e.what());
         return 1;

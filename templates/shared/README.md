@@ -7,34 +7,40 @@ A {% frontend_label %} frontend and an API built with {% backend_label %} ({% ba
 An API built with {% backend_label %} ({% backend_language %}){% if has_db %}, storing data in {% database_label %}{% endif %}.
 {% endif %}
 {% if has_frontend and not has_backend %}
-A {% frontend_label %} app built with Vite and TypeScript. Todos are kept in the browser.
+A {% frontend_label %} app built with {% if angular %}the Angular CLI{% else %}Vite{% endif %} and TypeScript. Todos are kept in the browser.
 {% endif %}
 It starts as a small todo app, so every part already works end to end: replace the todos with your own features.
 
 | Part | Built with | Folder |
 |---|---|---|
 {% if has_frontend %}
-| Frontend | {% frontend_label %}, Vite, TypeScript | {% frontend_where %} |
+| Frontend | {% frontend_label %}{% if angular %} {% v_angular %}, Angular CLI{% else %}, Vite{% endif %}, TypeScript | {% frontend_where %} |
 {% endif %}
 {% if has_backend %}
 {% if spring %}
 | Backend | Spring Boot {% v_spring_boot %}, Java {% v_java %}{% if has_db %}, JDBC, Flyway{% endif %} | {% backend_where %} |
 {% endif %}
 {% if express %}
-| Backend | Express {% v_express %}, Node.js {% v_node %}, TypeScript{% if has_db %}, node-postgres{% endif %} | {% backend_where %} |
+| Backend | Express {% v_express %}, Node.js {% v_node %}, TypeScript{% if postgres %}, node-postgres{% endif %}{% if mysql %}, mysql2{% endif %} | {% backend_where %} |
 {% endif %}
 {% if fastapi %}
-| Backend | FastAPI, Python {% v_python %}{% if has_db %}, SQLAlchemy, psycopg{% endif %} | {% backend_where %} |
+| Backend | FastAPI, Python {% v_python %}{% if postgres %}, SQLAlchemy, psycopg{% endif %}{% if mysql %}, SQLAlchemy, PyMySQL{% endif %} | {% backend_where %} |
 {% endif %}
 {% if go %}
-| Backend | Go {% v_go %}, standard library router{% if has_db %}, pgx{% endif %} | {% backend_where %} |
+| Backend | Go {% v_go %}, standard library router{% if postgres %}, pgx{% endif %}{% if mysql %}, go-sql-driver/mysql{% endif %} | {% backend_where %} |
 {% endif %}
 {% if cpp %}
-| Backend | C++20, cpp-httplib, nlohmann/json{% if has_db %}, libpq{% endif %}, CMake | {% backend_where %} |
+| Backend | C++20, cpp-httplib, nlohmann/json{% if postgres %}, libpq{% endif %}{% if mysql %}, the MySQL C API{% endif %}, CMake | {% backend_where %} |
 {% endif %}
 {% endif %}
-{% if has_db %}
-| Database | {% database_label %} {% v_postgres %} (Docker) | `docker-compose.yml` |
+{% if postgres %}
+| Database | PostgreSQL {% v_postgres %} (Docker) | `docker-compose.yml` |
+{% endif %}
+{% if mysql %}
+| Database | MySQL {% v_mysql %} (Docker) | `docker-compose.yml` |
+{% endif %}
+{% if h2 %}
+| Database | H2, running inside the app; data in `{% backend_prefix %}data/` | `{% backend_prefix %}src/main/resources/application.properties` |
 {% endif %}
 
 ## Run it
@@ -53,7 +59,7 @@ Then try <http://localhost:8080/api/todos>.
 {% endif %}
 
 ### Without Docker
-{% if has_db %}
+{% if db_server %}
 
 Start only the database in Docker:
 
@@ -116,7 +122,7 @@ npm install
 npm run dev
 ```
 
-Then open <http://localhost:5173>.{% if has_backend %} Vite forwards `/api` to the backend on port 8080.{% endif %}
+Then open <http://localhost:{% dev_port %}>.{% if has_backend %} {% dev_server %} forwards `/api` to the backend on port 8080{% if angular %} (see `proxy.conf.json`){% endif %}.{% endif %}
 {% endif %}
 {% if has_backend %}
 
@@ -164,7 +170,7 @@ curl -X POST localhost:8080/api/todos -H "Content-Type: application/json" -d '{"
 
 {% if has_backend %}
 {% if has_db %}
-The backend tests check the API{% if spring %} against an in-memory H2 database running the real migrations{% endif %}{% if fastapi %} with an in-memory store, and the database code against SQLite{% endif %}{% if express or go or cpp %} with an in-memory store{% endif %}; the Docker Compose check in CI runs it against PostgreSQL.
+The backend tests check the API{% if spring %} against an in-memory H2 database running the real migrations{% endif %}{% if fastapi %} with an in-memory store, and the database code against SQLite{% endif %}{% if express or go or cpp %} with an in-memory store{% endif %}{% if db_server %}; the Docker Compose check in CI runs it against {% database_label %}{% endif %}.
 {% else %}
 The backend tests call the real API{% if spring %} on a random port{% endif %} with an in-memory store.
 {% endif %}
@@ -188,8 +194,13 @@ GitHub Actions runs all of this on every push ([.github/workflows/ci.yml](.githu
 {% if express %}
 | `{% backend_prefix %}src/app.ts` | the routes |
 | `{% backend_prefix %}src/todos.ts` | the model and the in-memory repository |
-{% if has_db %}
+{% if postgres %}
 | `{% backend_prefix %}src/postgres.ts` | the PostgreSQL repository and migration runner |
+{% endif %}
+{% if mysql %}
+| `{% backend_prefix %}src/mysql.ts` | the MySQL repository and migration runner |
+{% endif %}
+{% if db_server %}
 | `{% backend_prefix %}migrations/` | SQL migrations, applied at startup |
 {% endif %}
 {% endif %}
@@ -203,21 +214,29 @@ GitHub Actions runs all of this on every push ([.github/workflows/ci.yml](.githu
 {% if go %}
 | `{% backend_prefix %}handler.go` | the routes |
 | `{% backend_prefix %}todos.go` | the model and the in-memory store |
-{% if has_db %}
+{% if postgres %}
 | `{% backend_prefix %}postgres.go` | the PostgreSQL store and migration runner |
+{% endif %}
+{% if mysql %}
+| `{% backend_prefix %}mysql.go` | the MySQL store and migration runner |
+{% endif %}
+{% if db_server %}
 | `{% backend_prefix %}migrations/` | SQL migrations, embedded in the binary |
 {% endif %}
 {% endif %}
 {% if cpp %}
 | `{% backend_prefix %}src/api.cpp` | the routes |
 | `{% backend_prefix %}src/store.hpp` | the model, the store interface and the in-memory store |
-{% if has_db %}
+{% if postgres %}
 | `{% backend_prefix %}src/postgres_store.cpp` | the PostgreSQL store and its migrations |
+{% endif %}
+{% if mysql %}
+| `{% backend_prefix %}src/mysql_store.cpp` | the MySQL store and its migrations |
 {% endif %}
 {% endif %}
 {% endif %}
 {% if has_frontend %}
-| `{% frontend_prefix %}src/App.{% if react %}tsx{% else %}vue{% endif %}` | the page |
+| `{% frontend_prefix %}{% if react %}src/App.tsx{% endif %}{% if vue %}src/App.vue{% endif %}{% if angular %}src/app/app.ts{% endif %}` | the page |
 | `{% frontend_prefix %}src/api.ts` | {% if has_backend %}calls to the backend{% else %}where todos are saved (this browser){% endif %} |
 | `{% frontend_prefix %}src/todos.ts` | validation, shared by the page and its tests |
 {% endif %}

@@ -12,13 +12,13 @@ import java.util.regex.Pattern;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
-{% if postgres %}
+{% if has_db %}
 import org.springframework.test.context.ActiveProfiles;
 {% endif %}
 
 /** Starts the whole app on a random port and calls it over HTTP, like a real client would. */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-{% if postgres %}
+{% if has_db %}
 @ActiveProfiles("test")
 {% endif %}
 class TodoApiTests {

@@ -185,6 +185,12 @@ function showFile(file) {
 }
 
 function update() {
+  // H2 runs inside a Java app, so it's only offered with Spring Boot
+  const h2 = document.querySelector('input[name="database"][value="h2"]');
+  const spring = value("backend") === "spring";
+  h2.closest("label").hidden = !spring;
+  if (!spring && h2.checked) document.querySelector('input[name="database"][value="postgres"]').checked = true;
+
   const options = readOptions();
   const kind = value("kind");
   $("frontend-field").hidden = kind === "backend";

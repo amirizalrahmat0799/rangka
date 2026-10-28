@@ -20,12 +20,12 @@ func main() {
 		port = "8080"
 	}
 
-{% if postgres %}
+{% if db_server %}
 	databaseURL := os.Getenv("DATABASE_URL")
 	if databaseURL == "" {
-		databaseURL = "postgres://{% db_user %}:{% db_password %}@localhost:5432/{% db_name %}"
+		databaseURL = "{% db_url_local %}"
 	}
-	store, err := ConnectPostgres(ctx, databaseURL)
+	store, err := {% if postgres %}ConnectPostgres{% endif %}{% if mysql %}ConnectMySQL{% endif %}(ctx, databaseURL)
 	if err != nil {
 		log.Fatalf("database: %v", err)
 	}

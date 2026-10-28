@@ -3,6 +3,7 @@ dist/
 coverage/
 *.log
 *.tsbuildinfo
+.angular/
 .env
 .env.local
 .idea/

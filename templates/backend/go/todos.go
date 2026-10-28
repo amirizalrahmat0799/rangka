@@ -24,7 +24,7 @@ type Store interface {
 	Remove(ctx context.Context, id int64) (bool, error)
 }
 
-// MemoryStore keeps todos in memory: used by the tests{% if not postgres %}, and by the app until it gets a database{% endif %}.
+// MemoryStore keeps todos in memory: used by the tests{% if not db_server %}, and by the app until it gets a database{% endif %}.
 type MemoryStore struct {
 	mu     sync.Mutex
 	todos  map[int64]Todo

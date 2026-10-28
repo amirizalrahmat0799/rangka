@@ -1,4 +1,4 @@
-{% if postgres %}
+{% if has_db %}
 package {% package %}.todo;
 
 import java.util.List;
@@ -8,7 +8,7 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
-/** Todos in PostgreSQL, through Spring's JdbcClient. The table comes from db/migration (Flyway). */
+/** Todos in {% database_label %}, through Spring's JdbcClient. The table comes from db/migration (Flyway). */
 @Repository
 public class JdbcTodoRepository implements TodoRepository {
 
@@ -27,7 +27,8 @@ public class JdbcTodoRepository implements TodoRepository {
     public Todo create(String title) {
         KeyHolder keys = new GeneratedKeyHolder();
         jdbc.sql("INSERT INTO todos (title) VALUES (:title)").param("title", title).update(keys, "id");
-        return new Todo(keys.getKeyAs(Long.class), title, false);
+        // a Number: Long for PostgreSQL and H2, BigInteger for MySQL
+        return new Todo(keys.getKey().longValue(), title, false);
     }
 
     @Override

@@ -33,6 +33,19 @@ for (const scheme of ["light", "dark"]) {
     check((await page.textContent("#project-title")) === "kedai-runcit", "the name becomes kebab-case");
     check((await page.textContent("#command")).includes("--frontend vue --backend go --db postgres"), "CLI command follows the options");
     check(await page.isHidden("#package-field"), "Java package hidden for Go");
+    check(await page.isHidden("label:has(input[value=h2])"), "H2 hidden for Go");
+
+    await page.click("label:has(input[value=spring])");
+    await page.click("label:has(input[value=h2])");
+    check((await page.textContent("#command")).includes("--backend spring --db h2"), "H2 offered with Spring Boot");
+    await page.click("label:has(input[value=express])");
+    check((await page.textContent("#command")).includes("--db postgres"), "leaving Spring Boot switches H2 back to PostgreSQL");
+    await page.click("label:has(input[value=angular])");
+    await page.click("label:has(input[value=mysql])");
+    check((await page.textContent("#command")).includes("--frontend angular --backend express --db mysql"), "Angular and MySQL");
+    check((await page.textContent("#tree")).includes("angular.json"), "Angular files in the preview");
+    await page.click("label:has(input[value=vue])");
+    await page.click("label:has(input[value=go])");
 
     await page.click("label:has(input[value=frontend])");
     check(await page.isHidden("#backend-field"), "backend options hidden for a frontend on its own");

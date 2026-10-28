@@ -16,7 +16,7 @@ export interface TodoRepository {
   remove(id: number): Promise<boolean>;
 }
 
-/** Keeps todos in memory: used by the tests{% if postgres %}{% else %}, and by the app until it gets a database{% endif %}. */
+/** Keeps todos in memory: used by the tests{% if not db_server %}, and by the app until it gets a database{% endif %}. */
 export class MemoryTodoRepository implements TodoRepository {
   private todos = new Map<number, Todo>();
   private nextId = 1;

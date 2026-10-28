@@ -1,4 +1,4 @@
-{% if not postgres %}
+{% if not has_db %}
 package {% package %}.todo;
 
 import java.util.ArrayList;

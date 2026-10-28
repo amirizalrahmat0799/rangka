@@ -5,9 +5,10 @@
 namespace rangka {
 namespace {
 
-constexpr std::array<Choice, 3> kFrontends = {{
+constexpr std::array<Choice, 4> kFrontends = {{
     {"react", "React", "TypeScript", "React 19, Vite and TypeScript"},
     {"vue", "Vue", "TypeScript", "Vue 3, Vite and TypeScript"},
+    {"angular", "Angular", "TypeScript", "Angular 22 with signals and standalone components"},
     {"none", "None", "", "no frontend"},
 }};
 
@@ -20,13 +21,15 @@ constexpr std::array<Choice, 6> kBackends = {{
     {"none", "None", "", "no backend"},
 }};
 
-constexpr std::array<Choice, 2> kDatabases = {{
-    {"postgres", "PostgreSQL", "", "PostgreSQL 17, with migrations"},
+constexpr std::array<Choice, 4> kDatabases = {{
+    {"postgres", "PostgreSQL", "", "PostgreSQL 17 in Docker"},
+    {"mysql", "MySQL", "", "MySQL 8.4 in Docker"},
+    {"h2", "H2", "", "inside the app, Spring Boot only"},
     {"none", "None", "", "data kept in memory"},
 }};
 
 // Bump versions here; every template reads them from these variables.
-constexpr std::array<Version, 32> kVersions = {{
+constexpr std::array<Version, 41> kVersions = {{
     // Java
     {"v_java", "Java", "21"},
     {"v_spring_boot", "Spring Boot", "4.1.1"},
@@ -49,22 +52,31 @@ constexpr std::array<Version, 32> kVersions = {{
     {"v_vue", "Vue", "3.5.44"},
     {"v_vite_vue", "@vitejs/plugin-vue", "6.0.10"},
     {"v_vue_tsc", "vue-tsc", "3.3.13"},
+    {"v_angular", "Angular", "22.2.3"},
+    {"v_angular_cli", "Angular CLI", "22.2.4"},
+    {"v_typescript_angular", "TypeScript (Angular)", "6.0.3"},
+    {"v_rxjs", "RxJS", "7.8.2"},
+    {"v_tslib", "tslib", "2.8.1"},
+    {"v_mysql2", "MySQL2 (Node.js)", "3.24.6"},
     // Python
     {"v_python", "Python", "3.13"},
     {"v_fastapi", "FastAPI", "0.162.0"},
     {"v_uvicorn", "Uvicorn", "0.54.0"},
     {"v_sqlalchemy", "SQLAlchemy", "2.1.6"},
     {"v_psycopg", "psycopg", "3.3.6"},
+    {"v_pymysql", "PyMySQL", "1.2.3"},
     {"v_pytest", "pytest", "9.2.0"},
     {"v_httpx2", "HTTPX 2", "2.16.0"},
     // Go
     {"v_go", "Go", "1.26"},
     {"v_pgx", "pgx", "5.11.0"},
+    {"v_go_mysql", "Go MySQL driver", "1.10.1"},
     // C++
     {"v_httplib", "cpp-httplib", "0.46.0"},
     {"v_json", "nlohmann/json", "3.12.0"},
     // Database
     {"v_postgres", "PostgreSQL", "17"},
+    {"v_mysql", "MySQL", "8.4"},
 }};
 
 template <typename E, size_t N>
@@ -84,16 +96,21 @@ std::span<const Choice> backend_choices() { return kBackends; }
 std::span<const Choice> database_choices() { return kDatabases; }
 std::span<const Version> versions() { return kVersions; }
 
-const Choice& choice(Frontend f) { return lookup(kFrontends, f, {Frontend::React, Frontend::Vue, Frontend::None}); }
+const Choice& choice(Frontend f) {
+    return lookup(kFrontends, f, {Frontend::React, Frontend::Vue, Frontend::Angular, Frontend::None});
+}
 const Choice& choice(Backend b) {
     return lookup(kBackends, b,
                   {Backend::Spring, Backend::Express, Backend::FastApi, Backend::Go, Backend::Cpp, Backend::None});
 }
-const Choice& choice(Database d) { return lookup(kDatabases, d, {Database::Postgres, Database::None}); }
+const Choice& choice(Database d) {
+    return lookup(kDatabases, d, {Database::Postgres, Database::MySql, Database::H2, Database::None});
+}
 
 std::optional<Frontend> parse_frontend(std::string_view id) {
     if (id == "react") return Frontend::React;
     if (id == "vue") return Frontend::Vue;
+    if (id == "angular") return Frontend::Angular;
     if (id == "none" || id.empty()) return Frontend::None;
     return std::nullopt;
 }
@@ -110,6 +127,8 @@ std::optional<Backend> parse_backend(std::string_view id) {
 
 std::optional<Database> parse_database(std::string_view id) {
     if (id == "postgres" || id == "postgresql") return Database::Postgres;
+    if (id == "mysql") return Database::MySql;
+    if (id == "h2") return Database::H2;
     if (id == "none" || id.empty()) return Database::None;
     return std::nullopt;
 }

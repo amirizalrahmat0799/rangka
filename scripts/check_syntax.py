@@ -16,9 +16,9 @@ from pathlib import Path
 import yaml  # pip install pyyaml
 
 rangka = sys.argv[1] if len(sys.argv) > 1 else "build/rangka"
-frontends = ["none", "react", "vue"]
+frontends = ["none", "react", "vue", "angular"]
 backends = ["none", "spring", "express", "fastapi", "go", "cpp"]
-databases = ["none", "postgres"]
+databases = ["none", "postgres", "mysql", "h2"]
 
 checked = combos = 0
 failures = []
@@ -26,7 +26,9 @@ with tempfile.TemporaryDirectory() as tmp:
     for i, (f, b, d) in enumerate(itertools.product(frontends, backends, databases)):
         if f == "none" and b == "none":
             continue
-        if b == "none" and d == "postgres":
+        if b == "none" and d != "none":
+            continue
+        if d == "h2" and b != "spring":
             continue
         combos += 1
         name = f"p{i}"

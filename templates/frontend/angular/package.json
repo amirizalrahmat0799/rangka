@@ -1,0 +1,26 @@
+{
+  "name": "{% name %}-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "ng serve",
+    "build": "ng build",
+    "test": "vitest run",
+    "ng": "ng"
+  },
+  "dependencies": {
+    "@angular/common": "^{% v_angular %}",
+    "@angular/compiler": "^{% v_angular %}",
+    "@angular/core": "^{% v_angular %}",
+    "@angular/platform-browser": "^{% v_angular %}",
+    "rxjs": "~{% v_rxjs %}",
+    "tslib": "^{% v_tslib %}"
+  },
+  "devDependencies": {
+    "@angular/build": "^{% v_angular_cli %}",
+    "@angular/cli": "^{% v_angular_cli %}",
+    "@angular/compiler-cli": "^{% v_angular %}",
+    "typescript": "~{% v_typescript_angular %}",
+    "vitest": "^{% v_vitest %}"
+  }
+}

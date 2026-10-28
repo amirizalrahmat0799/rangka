@@ -32,7 +32,7 @@ public:
     virtual bool remove(std::int64_t id) = 0;
 };
 
-/// Keeps todos in memory: used by the tests{% if not postgres %}, and by the app until it gets a database{% endif %}.
+/// Keeps todos in memory: used by the tests{% if not db_server %}, and by the app until it gets a database{% endif %}.
 /// Thread safe, since the HTTP server handles requests on several threads.
 class MemoryStore : public Store {
 public:

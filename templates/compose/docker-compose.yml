@@ -7,7 +7,7 @@
 name: {% name %}
 
 services:
-{% if has_db %}
+{% if postgres %}
   db:
     image: postgres:{% v_postgres %}-alpine
     environment:
@@ -25,25 +25,49 @@ services:
       retries: 30
 
 {% endif %}
+{% if mysql %}
+  db:
+    image: mysql:{% v_mysql %}
+    environment:
+      MYSQL_DATABASE: {% db_name %}
+      MYSQL_USER: {% db_user %}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-{% db_password %}}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root}
+    ports:
+      - "3306:3306"   # so a backend running outside Docker can use it too
+    volumes:
+      - db-data:/var/lib/mysql
+    healthcheck:
+      # only answers once the real server is up (it doesn't listen on TCP while initialising)
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u {% db_user %} -p$$MYSQL_PASSWORD --silent"]
+      interval: 3s
+      timeout: 5s
+      retries: 40
+
+{% endif %}
 {% if has_backend %}
   backend:
     build: ./backend
     environment:
       PORT: "8080"
-{% if has_db and spring %}
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/{% db_name %}
+{% if db_server and spring %}
+      SPRING_DATASOURCE_URL: jdbc:{% if postgres %}postgresql{% else %}mysql{% endif %}://db:{% db_port %}/{% db_name %}
       SPRING_DATASOURCE_USERNAME: {% db_user %}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-{% db_password %}}
 {% endif %}
-{% if has_db and not spring %}
-      DATABASE_URL: postgres://{% db_user %}:${DB_PASSWORD:-{% db_password %}}@db:5432/{% db_name %}
+{% if db_server and not spring %}
+      DATABASE_URL: {% db_scheme %}://{% db_user %}:${DB_PASSWORD:-{% db_password %}}@db:{% db_port %}/{% db_name %}
 {% endif %}
     ports:
       - "8080:8080"
-{% if has_db %}
+{% if db_server %}
     depends_on:
       db:
         condition: service_healthy
+{% endif %}
+{% if h2 %}
+    volumes:
+      - h2-data:/app/data   # H2 keeps its files here
 {% endif %}
     restart: unless-stopped
 
@@ -60,7 +84,11 @@ services:
     restart: unless-stopped
 
 {% endif %}
-{% if has_db %}
+{% if db_server %}
 volumes:
   db-data:
+{% endif %}
+{% if h2 %}
+volumes:
+  h2-data:
 {% endif %}

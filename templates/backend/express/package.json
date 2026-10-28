@@ -14,7 +14,12 @@
 {% if postgres %}
     "express": "^{% v_express %}",
     "pg": "^{% v_pg %}"
-{% else %}
+{% endif %}
+{% if mysql %}
+    "express": "^{% v_express %}",
+    "mysql2": "^{% v_mysql2 %}"
+{% endif %}
+{% if not db_server %}
     "express": "^{% v_express %}"
 {% endif %}
   },

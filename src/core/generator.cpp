@@ -40,6 +40,10 @@ Result<Options> validate(Options o) {
     if (o.database != Database::None && o.backend == Backend::None) {
         return fail("a database needs a backend to talk to it");
     }
+    if (o.database == Database::H2 && o.backend != Backend::Spring) {
+        return fail("H2 is a Java database that runs inside the app, so it only works with Spring Boot "
+                    "(choose PostgreSQL or MySQL for this backend)");
+    }
     if (o.backend == Backend::Spring) {
         if (o.java_package.empty()) {
             std::string flat = to_flat(o.name);
@@ -67,7 +71,9 @@ Result<Variables> variables_for(const Options& input) {
     const bool has_frontend = o.frontend != Frontend::None;
     const bool has_backend = o.backend != Backend::None;
     const bool has_db = o.database != Database::None;
-    const bool multi = (has_frontend && has_backend) || has_db;
+    // a database server (not H2, which runs inside the app) needs Docker Compose, and so its own layout
+    const bool db_server = o.database == Database::Postgres || o.database == Database::MySql;
+    const bool multi = (has_frontend && has_backend) || db_server;
 
     v.set("has_frontend", has_frontend);
     v.set("has_backend", has_backend);
@@ -80,6 +86,10 @@ Result<Variables> variables_for(const Options& input) {
     v.set("frontend_label", std::string(choice(o.frontend).label));
     v.set("react", o.frontend == Frontend::React);
     v.set("vue", o.frontend == Frontend::Vue);
+    v.set("angular", o.frontend == Frontend::Angular);
+    v.set("vite", o.frontend == Frontend::React || o.frontend == Frontend::Vue);
+    v.set("dev_port", o.frontend == Frontend::Angular ? "4200" : "5173");
+    v.set("dev_server", o.frontend == Frontend::Angular ? "The Angular dev server" : "Vite");
 
     v.set("backend", std::string(choice(o.backend).id));
     v.set("backend_label", std::string(choice(o.backend).label));
@@ -93,9 +103,22 @@ Result<Variables> variables_for(const Options& input) {
     v.set("database", std::string(choice(o.database).id));
     v.set("database_label", std::string(choice(o.database).label));
     v.set("postgres", o.database == Database::Postgres);
-    v.set("db_name", to_snake(o.name));
+    v.set("mysql", o.database == Database::MySql);
+    v.set("h2", o.database == Database::H2);
+    v.set("db_server", db_server);
+    const std::string db_name = to_snake(o.name);
+    v.set("db_name", db_name);
     v.set("db_user", "app");
     v.set("db_password", "app");
+    const bool mysql = o.database == Database::MySql;
+    v.set("db_port", mysql ? "3306" : "5432");
+    v.set("db_scheme", mysql ? "mysql" : "postgres");
+    // connection settings for running the backend on your machine, against the database in Docker
+    v.set("db_url_local", std::string(mysql ? "mysql" : "postgres") + "://app:app@localhost:" + (mysql ? "3306" : "5432") +
+                              "/" + db_name);
+    v.set("jdbc_url_local", o.database == Database::H2 ? "jdbc:h2:file:./data/" + db_name
+                            : mysql                    ? "jdbc:mysql://localhost:3306/" + db_name
+                                                       : "jdbc:postgresql://localhost:5432/" + db_name);
 
     // where each part goes: its own folder when there's more than one part, otherwise the project root
     v.set("backend_dir", multi ? "backend" : ".");
@@ -177,7 +200,7 @@ Result<Project> generate(const Options& input, std::span<const EmbeddedFile> tem
     std::string fdir = multi ? "cd frontend && " : "";
     const bool fullstack = has_frontend && o.backend != Backend::None;
     if (multi) steps.push_back("# or without Docker (see README.md):");
-    if (o.database != Database::None) steps.push_back("docker compose up -d db");
+    if (o.database == Database::Postgres || o.database == Database::MySql) steps.push_back("docker compose up -d db");
     if (fullstack) steps.push_back("# the backend, in one terminal:");
     switch (o.backend) {
         case Backend::Spring: steps.push_back(bdir + "mvn spring-boot:run"); break;
@@ -193,10 +216,11 @@ Result<Project> generate(const Options& input, std::span<const EmbeddedFile> tem
             break;
         case Backend::None: break;
     }
-    if (fullstack) steps.push_back("# the frontend, in another (then open http://localhost:5173):");
+    const std::string dev_url = o.frontend == Frontend::Angular ? "http://localhost:4200" : "http://localhost:5173";
+    if (fullstack) steps.push_back("# the frontend, in another (then open " + dev_url + "):");
     if (has_frontend) {
         steps.push_back(fdir + "npm install && npm run dev");
-        if (!fullstack) steps.push_back("# then open http://localhost:5173");
+        if (!fullstack) steps.push_back("# then open " + dev_url);
     }
 
     project.variables = std::move(vars);
