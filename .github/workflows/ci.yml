@@ -1,0 +1,105 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    name: Build and test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v5
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+      - name: Build
+        run: cmake --build build --config Release -j 4
+      - name: Test
+        run: ctest --test-dir build -C Release --output-on-failure
+      - name: Generated files parse (JSON, YAML, TOML, XML)
+        if: runner.os == 'Linux'
+        run: |
+          pip install pyyaml
+          python3 scripts/check_syntax.py build/rangka
+      - uses: actions/upload-artifact@v4
+        if: runner.os == 'Linux'
+        with:
+          name: rangka-linux
+          path: build/rangka
+
+  # Generates projects and builds and tests them with their real toolchains, the way their own CI would.
+  generated:
+    name: Generated ${{ matrix.name }}
+    needs: build
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: spring, args: "-b spring" }
+          - { name: react + spring + postgres, args: "-f react -b spring -d postgres", docker: true }
+          - { name: express, args: "-b express" }
+          - { name: vue + express + postgres, args: "-f vue -b express -d postgres", docker: true }
+          - { name: fastapi, args: "-b fastapi" }
+          - { name: react + fastapi + postgres, args: "-f react -b fastapi -d postgres", docker: true }
+          - { name: go, args: "-b go" }
+          - { name: vue + go + postgres, args: "-f vue -b go -d postgres", docker: true }
+          - { name: cpp, args: "-b cpp" }
+          - { name: react + cpp + postgres, args: "-f react -b cpp -d postgres", docker: true }
+          - { name: react, args: "-f react" }
+          - { name: vue, args: "-f vue" }
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/download-artifact@v4
+        with:
+          name: rangka-linux
+          path: bin
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.26"
+          cache: false
+      - run: sudo apt-get update && sudo apt-get install -y libpq-dev
+      - name: Generate
+        run: |
+          chmod +x bin/rangka
+          bin/rangka new demo ${{ matrix.args }} -o "$RUNNER_TEMP" -y
+      - name: Build and test the generated project
+        run: scripts/verify_project.sh "$RUNNER_TEMP/demo" ${{ matrix.docker && '--docker' || '' }}
+
+  web:
+    name: Web page
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+      - run: pip install ziglang==0.15.2
+      - name: Build rangka.wasm
+        run: scripts/build_wasm.sh
+      - name: Test in a browser
+        run: |
+          npm install --no-save playwright@1.56.1
+          npx playwright install --with-deps chromium
+          (cd web && python3 -m http.server 8765 &)
+          sleep 1
+          node scripts/test_web.mjs http://localhost:8765/

@@ -1,0 +1,66 @@
+# Starts the whole app: docker compose up --build
+{% if has_frontend %}
+# then open http://localhost:3000
+{% else %}
+# then try http://localhost:8080/api/todos
+{% endif %}
+name: {% name %}
+
+services:
+{% if has_db %}
+  db:
+    image: postgres:{% v_postgres %}-alpine
+    environment:
+      POSTGRES_DB: {% db_name %}
+      POSTGRES_USER: {% db_user %}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-{% db_password %}}
+    ports:
+      - "5432:5432"   # so a backend running outside Docker can use it too
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U {% db_user %} -d {% db_name %}"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
+{% endif %}
+{% if has_backend %}
+  backend:
+    build: ./backend
+    environment:
+      PORT: "8080"
+{% if has_db and spring %}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/{% db_name %}
+      SPRING_DATASOURCE_USERNAME: {% db_user %}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-{% db_password %}}
+{% endif %}
+{% if has_db and not spring %}
+      DATABASE_URL: postgres://{% db_user %}:${DB_PASSWORD:-{% db_password %}}@db:5432/{% db_name %}
+{% endif %}
+    ports:
+      - "8080:8080"
+{% if has_db %}
+    depends_on:
+      db:
+        condition: service_healthy
+{% endif %}
+    restart: unless-stopped
+
+{% endif %}
+{% if has_frontend %}
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:80"
+{% if has_backend %}
+    depends_on:
+      - backend
+{% endif %}
+    restart: unless-stopped
+
+{% endif %}
+{% if has_db %}
+volumes:
+  db-data:
+{% endif %}

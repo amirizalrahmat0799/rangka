@@ -1,0 +1,4 @@
+* text=auto eol=lf
+# templates are embedded byte for byte: keep LF on every platform
+templates/** text eol=lf
+*.png binary

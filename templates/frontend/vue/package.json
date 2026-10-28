@@ -1,0 +1,23 @@
+{
+  "name": "{% name %}-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "vue-tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "vue": "^{% v_vue %}"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^{% v_vite_vue %}",
+    "typescript": "^{% v_typescript %}",
+    "vite": "^{% v_vite %}",
+    "vitest": "^{% v_vitest %}",
+    "vue-tsc": "^{% v_vue_tsc %}"
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "name": "{% name %}-backend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc -p tsconfig.build.json",
+    "start": "node dist/server.js",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+{% if postgres %}
+    "express": "^{% v_express %}",
+    "pg": "^{% v_pg %}"
+{% else %}
+    "express": "^{% v_express %}"
+{% endif %}
+  },
+  "devDependencies": {
+    "@types/express": "^{% v_types_express %}",
+    "@types/node": "^{% v_types_node %}",
+{% if postgres %}
+    "@types/pg": "^{% v_types_pg %}",
+{% endif %}
+    "@types/supertest": "^{% v_types_supertest %}",
+    "supertest": "^{% v_supertest %}",
+    "tsx": "^{% v_tsx %}",
+    "typescript": "^{% v_typescript %}",
+    "vitest": "^{% v_vitest %}"
+  },
+  "engines": {
+    "node": ">={% v_node %}"
+  }
+}

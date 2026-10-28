@@ -1,0 +1,178 @@
+:root {
+  --bg: #f6f7f9;
+  --card: #ffffff;
+  --text: #1c2430;
+  --muted: #6b7686;
+  --line: #e3e7ed;
+  --accent: #0f766e;
+  --accent-text: #ffffff;
+  --danger: #c2410c;
+  --ok: #15803d;
+  color-scheme: light dark;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f1419;
+    --card: #182029;
+    --text: #e6eaf0;
+    --muted: #8b96a6;
+    --line: #2a3441;
+    --accent: #2dd4bf;
+    --accent-text: #062a26;
+    --danger: #fb923c;
+    --ok: #4ade80;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.app {
+  max-width: 34rem;
+  margin: 3rem auto;
+  padding: 0 1rem;
+}
+
+h1 {
+  margin: 0;
+  font-size: 1.8rem;
+}
+
+.status {
+  margin: 0.4rem 0 1.5rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.status::before {
+  content: "";
+  display: inline-block;
+  width: 0.55rem;
+  height: 0.55rem;
+  margin-right: 0.45rem;
+  border-radius: 50%;
+  background: var(--ok);
+}
+
+.status.down::before {
+  background: var(--danger);
+}
+
+.add {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.add input {
+  flex: 1;
+  padding: 0.65rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  background: var(--card);
+  color: var(--text);
+  font: inherit;
+}
+
+.add input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-color: transparent;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+}
+
+.add button {
+  padding: 0 1.1rem;
+  border: 0;
+  border-radius: 0.5rem;
+  background: var(--accent);
+  color: var(--accent-text);
+  font-weight: 600;
+}
+
+.error {
+  color: var(--danger);
+  font-size: 0.9rem;
+}
+
+.todos {
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 0.6rem;
+}
+
+.todos li {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.7rem 0.9rem;
+  border-top: 1px solid var(--line);
+}
+
+.todos li:first-child {
+  border-top: 0;
+}
+
+.todos label {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  cursor: pointer;
+}
+
+.todos input[type="checkbox"] {
+  width: 1.1rem;
+  height: 1.1rem;
+  accent-color: var(--accent);
+}
+
+.todos .done span {
+  color: var(--muted);
+  text-decoration: line-through;
+}
+
+.todos .remove {
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.todos .remove:hover {
+  color: var(--danger);
+}
+
+.empty {
+  padding: 1.5rem;
+  color: var(--muted);
+  text-align: center;
+}
+
+footer {
+  margin-top: 1rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+  display: flex;
+  justify-content: space-between;
+}
+
+footer a {
+  color: inherit;
+}

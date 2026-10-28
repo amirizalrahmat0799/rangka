@@ -1,0 +1,108 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+{% if has_backend %}
+  backend:
+    name: Backend ({% backend_label %})
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: {% backend_dir %}
+    steps:
+      - uses: actions/checkout@v5
+{% if spring %}
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "{% v_java %}"
+          cache: maven
+          cache-dependency-path: {% backend_prefix %}pom.xml
+      - name: Build and test
+        run: mvn -B verify
+{% endif %}
+{% if express %}
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "{% v_node %}"
+      - run: npm install
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+{% endif %}
+{% if fastapi %}
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "{% v_python %}"
+      - run: pip install -r requirements-dev.txt
+      - run: python -m pytest
+{% endif %}
+{% if go %}
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "{% v_go %}"
+          cache: false
+      - run: go mod tidy
+      - run: go vet ./...
+      - run: go test ./...
+{% endif %}
+{% if cpp %}
+{% if has_db %}
+      - run: sudo apt-get update && sudo apt-get install -y libpq-dev
+{% endif %}
+      - run: cmake -B build -DCMAKE_BUILD_TYPE=Release
+      - run: cmake --build build -j
+      - run: ctest --test-dir build --output-on-failure
+{% endif %}
+
+{% endif %}
+{% if has_frontend %}
+  frontend:
+    name: Frontend ({% frontend_label %})
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: {% frontend_dir %}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "{% v_node %}"
+      - run: npm install
+      - run: npm test
+      - run: npm run build
+
+{% endif %}
+{% if multi %}
+  docker:
+    name: Docker Compose
+    runs-on: ubuntu-latest
+    needs: [{% if has_backend %}backend{% endif %}{% if fullstack %}, {% endif %}{% if has_frontend %}frontend{% endif %}]
+    steps:
+      - uses: actions/checkout@v5
+      - name: Start everything
+        run: docker compose up -d --build --wait
+      - name: Smoke test
+        run: |
+{% if has_frontend %}
+          base=http://localhost:3000   # through nginx, like a browser
+{% else %}
+          base=http://localhost:8080
+{% endif %}
+          for i in $(seq 1 60); do curl -sf "$base/api/health" && break; sleep 2; done
+          curl -sf -X POST "$base/api/todos" -H "Content-Type: application/json" -d '{"title": "from CI"}'
+          curl -sf "$base/api/todos" | grep -q "from CI"
+{% if has_frontend %}
+          curl -sf "$base/" | grep -q '<div id="'
+{% endif %}
+      - name: Logs
+        if: failure()
+        run: docker compose logs
+      - name: Stop
+        if: always()
+        run: docker compose down -v
+{% endif %}

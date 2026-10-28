@@ -1,0 +1,6 @@
+fastapi~={% v_fastapi %}
+uvicorn[standard]~={% v_uvicorn %}
+{% if postgres %}
+sqlalchemy~={% v_sqlalchemy %}
+psycopg[binary]~={% v_psycopg %}
+{% endif %}

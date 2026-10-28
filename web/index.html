@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>rangka · start a project</title>
+    <meta name="description" content="Start a project with a frontend, a backend, a database, or all three, already wired together. Runs in your browser." />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="stylesheet" href="style.css" />
+    <script type="module" src="app.js"></script>
+  </head>
+  <body>
+    <header class="top">
+      <a class="brand" href="./"><img src="favicon.svg" alt="" width="28" height="28" /> rangka</a>
+      <span class="tagline">Start a project: a frontend, a backend, a database, or all three, wired together.</span>
+      <a class="gh" href="https://github.com/amirizalrahmat0799/rangka">GitHub</a>
+    </header>
+
+    <main class="layout">
+      <form id="form" class="panel options" autocomplete="off">
+        <label class="field">
+          <span>Project name</span>
+          <input id="name" value="my-app" spellcheck="false" />
+        </label>
+
+        <fieldset class="field">
+          <legend>What are you building?</legend>
+          <div class="segmented" id="kind">
+            <label><input type="radio" name="kind" value="full" checked /><span>Full stack</span></label>
+            <label><input type="radio" name="kind" value="backend" /><span>Backend API</span></label>
+            <label><input type="radio" name="kind" value="frontend" /><span>Frontend</span></label>
+          </div>
+        </fieldset>
+
+        <fieldset class="field" id="frontend-field">
+          <legend>Frontend</legend>
+          <div class="cards" id="frontends"></div>
+        </fieldset>
+
+        <fieldset class="field" id="backend-field">
+          <legend>Backend</legend>
+          <div class="cards" id="backends"></div>
+        </fieldset>
+
+        <fieldset class="field" id="database-field">
+          <legend>Database</legend>
+          <div class="cards" id="databases"></div>
+        </fieldset>
+
+        <label class="field" id="package-field">
+          <span>Java package</span>
+          <input id="package" placeholder="com.example.myapp" spellcheck="false" />
+        </label>
+
+        <label class="check">
+          <input type="checkbox" id="ci" checked />
+          <span>GitHub Actions CI</span>
+        </label>
+
+        <p class="error" id="error" hidden></p>
+
+        <div class="actions">
+          <button type="submit" class="primary" id="download">Download .zip</button>
+        </div>
+
+        <div class="cli">
+          <span>Or with the CLI</span>
+          <div class="command">
+            <code id="command"></code>
+            <button type="button" id="copy" title="Copy">Copy</button>
+          </div>
+        </div>
+      </form>
+
+      <section class="panel explorer" aria-label="Files">
+        <div class="explorer-head">
+          <strong id="project-title">my-app</strong>
+          <span id="file-count" class="muted"></span>
+        </div>
+        <div class="explorer-body">
+          <nav id="tree" class="tree"></nav>
+          <div class="viewer">
+            <div class="viewer-head"><span id="file-name"></span></div>
+            <pre id="file-content"></pre>
+          </div>
+        </div>
+        <details class="next" open>
+          <summary>Next steps</summary>
+          <pre id="next-steps"></pre>
+        </details>
+      </section>
+    </main>
+
+    <footer class="bottom">
+      <span>rangka <span id="version"></span>: the generator runs in your browser as WebAssembly, compiled from the same C++ as the CLI.</span>
+      <a href="https://github.com/amirizalrahmat0799/rangka/releases">Get the CLI</a>
+    </footer>
+  </body>
+</html>

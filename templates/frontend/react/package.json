@@ -1,0 +1,25 @@
+{
+  "name": "{% name %}-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "react": "^{% v_react %}",
+    "react-dom": "^{% v_react %}"
+  },
+  "devDependencies": {
+    "@types/react": "^{% v_types_react %}",
+    "@types/react-dom": "^{% v_types_react %}",
+    "@vitejs/plugin-react": "^{% v_vite_react %}",
+    "typescript": "^{% v_typescript %}",
+    "vite": "^{% v_vite %}",
+    "vitest": "^{% v_vitest %}"
+  }
+}

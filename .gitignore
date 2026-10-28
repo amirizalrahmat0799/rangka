@@ -1,0 +1,10 @@
+build/
+cmake-build-*/
+out/
+.cache/
+compile_commands.json
+node_modules/
+web/rangka.wasm
+.idea/
+.vscode/
+.DS_Store
