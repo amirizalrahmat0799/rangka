@@ -84,7 +84,8 @@ jobs:
   web:
     name: Web page
     needs: build
-    runs-on: ubuntu-latest
+    # pinned: Playwright 1.56 has no browser builds for newer Ubuntu releases
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
