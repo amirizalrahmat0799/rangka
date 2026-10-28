@@ -16,7 +16,7 @@ rangka creates a project that builds, passes its tests and runs with one `docker
 It's one C++ program, used two ways:
 
 - **a CLI**: a single executable for Windows, Linux and macOS, with the templates built in;
-- **[a web page](https://amirizalrahmat0799.github.io/rangka/)**: the same C++ compiled to WebAssembly, so the
+- **[Web](https://amirizalrahmat0799.github.io/rangka/)**: the same C++ compiled to WebAssembly, so the
   project is generated in your browser, previewed file by file, and downloaded as a zip.
 
 ![The rangka web page, previewing a React + Spring Boot + PostgreSQL project](docs/images/web-light.png)
